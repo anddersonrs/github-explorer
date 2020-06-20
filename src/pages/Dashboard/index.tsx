@@ -1,57 +1,62 @@
-import React from 'react';
+import React, { FormEvent } from 'react';
 import { FiChevronRight } from 'react-icons/fi';
+import ApiClient from '../../services/ApiClient';
 
 import logoImg from '../../assets/logo.svg';
 
 import { Title, Form, Repositories } from './styles';
 
+interface Repository {
+  full_name: string;
+  description: string;
+  owner: {
+    login: string;
+    avatar_url: string;
+  };
+}
+
 const Dashboard: React.FC = () => {
+  const [newRepo, setNewRepo] = React.useState('');
+  const [repositories, setRepositories] = React.useState<Repository[]>([]);
+
+  const handleAddRepository = async (
+    event: FormEvent<HTMLFormElement>,
+  ): Promise<void> => {
+    event.preventDefault();
+    const response = await ApiClient.get<Repository>(`repos/${newRepo}`);
+    const repository = response.data;
+    setRepositories([...repositories, repository]);
+    setNewRepo('');
+  };
+
   return (
     <>
       <img src={logoImg} alt="Github Explorer" />
       <Title>Explore repositórios no Github</Title>
 
-      <Form>
-        <input placeholder="Digite o nome do repositório" />
+      <Form onSubmit={handleAddRepository}>
+        <input
+          value={newRepo}
+          onChange={(event) => setNewRepo(event.target.value)}
+          placeholder="Digite o nome do repositório"
+        />
         <button type="submit">Pesquisar</button>
       </Form>
 
       <Repositories>
-        <a href="teste">
-          <img
-            src="https://avatars1.githubusercontent.com/u/10183881?s=460&u=657709fe67fd8d720e3e893d9f6f185d976ac96f&v=4"
-            alt="Anderson Rodrigues"
-          />
-          <div>
-            <strong>anddersonrs/omnistack</strong>
-            <p>Easy peasy higly scalable ReactJS & React native forms!</p>
-          </div>
-          <FiChevronRight size={20} />
-        </a>
-
-        <a href="teste">
-          <img
-            src="https://avatars1.githubusercontent.com/u/10183881?s=460&u=657709fe67fd8d720e3e893d9f6f185d976ac96f&v=4"
-            alt="Anderson Rodrigues"
-          />
-          <div>
-            <strong>anddersonrs/omnistack</strong>
-            <p>Easy peasy higly scalable ReactJS & React native forms!</p>
-          </div>
-          <FiChevronRight size={20} />
-        </a>
-
-        <a href="teste">
-          <img
-            src="https://avatars1.githubusercontent.com/u/10183881?s=460&u=657709fe67fd8d720e3e893d9f6f185d976ac96f&v=4"
-            alt="Anderson Rodrigues"
-          />
-          <div>
-            <strong>anddersonrs/omnistack</strong>
-            <p>Easy peasy higly scalable ReactJS & React native forms!</p>
-          </div>
-          <FiChevronRight size={20} />
-        </a>
+        {repositories.map((repository) => (
+          <a key={repository.full_name} href="teste">
+            <img
+              src={repository.owner.avatar_url}
+              alt={repository.owner.login}
+            />
+            <div>
+              <strong>{repository.full_name}</strong>
+              <p>{repository.description}</p>
+            </div>
+            <FiChevronRight size={20} />
+          </a>
+        ))}
       </Repositories>
     </>
   );
